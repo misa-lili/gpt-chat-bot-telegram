@@ -33,11 +33,11 @@ bot.on("message", async (msg) => {
     const chatId = msg.chat.id
     console.log(chatType, "input:", input)
 
+    if (typeof input !== "string") return
+
     if (input.toString().toLowerCase().includes("%debug%")) {
       bot.sendMessage(chatId, JSON.stringify(msg, null, 4))
     }
-
-    if (typeof input !== "string") return
 
     if (
       !input.toString().toLowerCase().includes("털쥐") &&
