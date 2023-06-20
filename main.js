@@ -70,6 +70,6 @@ bot.on("message", async (msg) => {
     } else {
       console.error(error)
     }
-    bot.sendMessage(chatId, "에러났다냥😿")
+    bot.sendMessage(msg.chat.id, "에러났다냥😿")
   }
 })
