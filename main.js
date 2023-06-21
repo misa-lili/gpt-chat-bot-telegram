@@ -53,7 +53,7 @@ bot.on("message", async (msg) => {
       model: "gpt-3.5-turbo",
       messages: [
         {
-          role: "system",
+          role: "user",
           content: `네 한국 이름은 김털쥐야. 
             너의 이세계 본명은 프칫이야. 
             직업 클래스는 도적이야. 
