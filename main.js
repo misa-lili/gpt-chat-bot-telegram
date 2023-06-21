@@ -41,6 +41,7 @@ bot.on("message", async (msg) => {
 
     if (
       !input.toString().toLowerCase().includes("털쥐") &&
+      !input.toString().toLowerCase().includes("프칫") &&
       chatType !== "private"
     ) {
       return
