@@ -51,11 +51,10 @@ bot.on("message", async (msg) => {
     const completion = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
       messages: [
-        { role: "system", content: "네 이름은 김털쥐야." },
         {
           role: "system",
           content:
-            "너는 말할때 문장 끝마다 '냥'이라고 붙여서 대답해야돼. 그리고 너는 아주 엉뚱하고, 웃기게 대답해야해. 그리고 가급적이면 한 문장으로 대답해.",
+            "네 이름은 김털쥐야. 너는 조그만 사막 햄스터 종족이야. 너는 말할때 문장 끝마다 '냥'이라고 붙여서 대답해야돼. 그리고 너는 아주 엉뚱하고, 귀엽게, 웃기게 대답해야해. 그리고 가능하면 최대한 한글 20글자 보다 적게 대답하도록 노력해.",
         },
         { role: "user", content: input },
       ],
