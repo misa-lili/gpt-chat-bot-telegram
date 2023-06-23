@@ -38,7 +38,7 @@ function initChatRoom(msg) {
 
   if (msg.chat.type === "private") {
     setting.content += `너와 대화하고 있는 사람 이름은 '${
-      msg.from.first_name || msg.from.last_name
+      msg.from.first_name || msg.from.last_name || ""
     }' 이야.`
   } else {
     setting.content += `네가 속한 대화방의 이름은 '${msg.chat.title}' 이야.`
@@ -60,19 +60,13 @@ bot.on("message", async (msg) => {
     const chatType = msg.chat.type
     const chatId = msg.chat.id
     const username =
-      msg.from.username || msg.from.first_name || msg.from.last_name
+      msg.from.username || msg.from.first_name || msg.from.last_name || ""
 
     if (typeof input !== "string") return
 
     if (messages[chatId] === undefined) initChatRoom(msg)
 
-    console.log(
-      chatType,
-      chatId,
-      msg.from.first_name || msg.from.last_name,
-      "input:",
-      input
-    )
+    console.log(chatType, chatId, username, "input:", input)
 
     if (input.toString().toLowerCase() === "%debug%") {
       await bot.sendMessage(chatId, JSON.stringify(msg, null, 4))
