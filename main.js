@@ -98,7 +98,7 @@ bot.on("message", async (msg) => {
     const completion = await openai.createChatCompletion({
       model: "gpt-4",
       messages: messages[chatId],
-      temperature: 0.2,
+      temperature: 0.4,
     })
     const output = completion.data.choices[0].message.content
 
