@@ -59,7 +59,8 @@ bot.on("message", async (msg) => {
     const input = msg.text
     const chatType = msg.chat.type
     const chatId = msg.chat.id
-    const username = msg.from.username
+    const username =
+      msg.from.username || msg.from.first_name || msg.from.last_name
 
     if (typeof input !== "string") return
 
