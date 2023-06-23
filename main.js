@@ -17,7 +17,7 @@ const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
-const maxMessageLength = 10
+const maxMessageLength = 30
 
 const openai = new OpenAIApi(configuration)
 const initMessage = {
