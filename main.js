@@ -59,6 +59,7 @@ bot.on("message", async (msg) => {
     const input = msg.text
     const chatType = msg.chat.type
     const chatId = msg.chat.id
+    const username = msg.from.username
 
     if (typeof input !== "string") return
 
@@ -91,7 +92,7 @@ bot.on("message", async (msg) => {
 
     bot.sendChatAction(chatId, "typing")
 
-    messages[chatId].push({ role: "user", content: input })
+    messages[chatId].push({ role: "user", name: username, content: input })
 
     const completion = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
