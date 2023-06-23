@@ -96,7 +96,7 @@ bot.on("message", async (msg) => {
     messages[chatId].push({ role: "user", name: username, content: input })
 
     const completion = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo-0613",
+      model: "gpt-4-0613",
       messages: messages[chatId],
       temperature: 1,
     })
