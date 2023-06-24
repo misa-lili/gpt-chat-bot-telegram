@@ -76,25 +76,39 @@ bot.on("message", async (msg) => {
       return
     }
 
-    bot.sendChatAction(chatId, "typing")
+    // do job
+    if (input.toString().toLocaleLowerCase().includes("그려줘")) {
+      bot.sendChatAction(chatId, "typing")
+      await bot.sendMessage(chatId, "알았다냥😽")
 
-    messages[chatId].push({ role: "user", name: username, content: input })
+      bot.sendChatAction(chatId, "upload_photo")
+      const response = await openai.createImage({
+        prompt: input,
+        n: 1,
+        size: "512x512",
+      })
+      if (response.data.data[0].url)
+        await bot.sendPhoto(chatId, response.data.data[0].url)
+    } else {
+      bot.sendChatAction(chatId, "typing")
+      messages[chatId].push({ role: "user", name: username, content: input })
 
-    const completion = await openai.createChatCompletion({
-      model: "gpt-4-0613",
-      messages: messages[chatId],
-      temperature: 1,
-    })
-    const output = completion.data.choices[0].message?.content ?? ""
+      const completion = await openai.createChatCompletion({
+        model: "gpt-4-0613",
+        messages: messages[chatId],
+        temperature: 1,
+      })
+      const output = completion.data.choices[0].message?.content ?? ""
 
-    if (completion.data.choices[0].message)
-      messages[chatId].push(completion.data.choices[0].message)
+      if (completion.data.choices[0].message)
+        messages[chatId].push(completion.data.choices[0].message)
 
-    if (messages[chatId]?.length > maxMessageLength + 1)
-      messages[chatId].splice(1, 2)
+      if (messages[chatId]?.length > maxMessageLength + 1)
+        messages[chatId].splice(1, 2)
 
-    console.log(chatType, "output:", output)
-    await bot.sendMessage(chatId, output)
+      console.log(chatType, "output:", output)
+      await bot.sendMessage(chatId, output)
+    }
   } catch (error: any) {
     if (error.response) {
       console.error(error.response.status)
