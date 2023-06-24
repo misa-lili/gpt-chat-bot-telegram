@@ -5,8 +5,9 @@
   "scripts": {
     "dev": "nodemon",
     "build": "npx tsc",
-    "service": "sudo cp ./gpt-chat-bot-telegram.service /etc/systemd/system/gpt-chat-bot-telegram.service && sudo systemctl daemon-reload && sudo systemctl enable gpt-chat-bot-telegram.service",
-    "update": "git pull && sudo systemctl restart gpt-chat-bot-telegram.service && journalctl -f -n 1000 -u gpt-chat-bot-telegram.service"
+    "service": "sudo cp ./gpt-chat-bot-telegram.service /etc/systemd/system/gpt-chat-bot-telegram.service && sudo systemctl daemon-reload && sudo systemctl enable gpt-chat-bot-telegram.service && sudo systemctl start gpt-chat-bot-telegram.service",
+    "update": "git pull && sudo systemctl restart gpt-chat-bot-telegram.service && journalctl -f -n 1000 -u gpt-chat-bot-telegram.service",
+    "stop": "sudo systemctl stop gpt-chat-bot-telegram.service"
   },
   "author": "",
   "license": "ISC",
