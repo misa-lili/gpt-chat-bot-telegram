@@ -7,7 +7,7 @@ After=network-online.target
 Type=simple
 User=ubuntu
 WorkingDirectory=/home/ubuntu/gpt-chat-bot-telegram
-ExecStart=/usr/bin/node main.js
+ExecStart=/usr/bin/node src/main.js
 Restart=on-failure
 
 [Install]
