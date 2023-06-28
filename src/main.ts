@@ -5,9 +5,7 @@ import { JSDOM } from "jsdom"
 import fetch from "node-fetch"
 import sharp from "sharp"
 import path from "path"
-import Ffmpeg from "fluent-ffmpeg"
-import { fetchAndConvert } from "./utils"
-import { Writable, Stream } from "stream"
+import { convertToWebmBuffer, convertToWebmStream } from "./utils"
 
 config()
 
@@ -121,11 +119,13 @@ bot.onText(/\/sticker (arca|dc) (\d+)/, async (msg, match) => {
       console.log(title)
       console.log(`https://t.me/addstickers/${name}`)
 
+      const buffer = await sharp(thumbnailBuffer).resize(512, 512).toBuffer()
+
       await bot.createNewStickerSet(
         userId,
         name,
         title,
-        await sharp(thumbnailBuffer).resize(512, 512).toBuffer(),
+        buffer,
         "🔖",
         {},
         { filename: name, contentType: "application/octet-stream" }
@@ -142,17 +142,17 @@ bot.onText(/\/sticker (arca|dc) (\d+)/, async (msg, match) => {
         // The image file must be in either .PNG or .WEBP format.
         if (["png"].includes(ext)) {
           bot.sendChatAction(chatId, "upload_photo")
-          let buffer = await fetch(url)
+          let sticker = await fetch(url)
             .then(async (response) => await response.buffer())
             .catch((error) => {
               throw new Error(error)
             })
-          buffer = await sharp(buffer)
+          sticker = await sharp(sticker)
             .resize(512, 512)
             .toFormat("png")
             .toBuffer()
 
-          await bot.addStickerToSet(userId, name, buffer, "🔖", "png_sticker")
+          await bot.addStickerToSet(userId, name, sticker, "🔖", "png_sticker")
         }
 
         // TODO: webm_sticker
@@ -165,17 +165,23 @@ bot.onText(/\/sticker (arca|dc) (\d+)/, async (msg, match) => {
         // Video must have no audio stream.
         if (["mp4"].includes(ext)) {
           bot.sendChatAction(chatId, "upload_video")
-          const stream = await fetchAndConvert(url)
+          const sticker = await convertToWebmBuffer(url)
 
-          await bot.addStickerToSet(userId, name, stream, "🔖", "webm_sticker")
+          await bot.sendVideo(chatId, sticker)
+
+          // await bot.addStickerToSet(
+          //   userId,
+          //   name,
+          //   sticker,
+          //   "🔖",
+          //   "webm_sticker",
+          //   {},
+          //   { filename: url, contentType: "application/octet-stream" }
+          // )
         }
       }
 
       await bot.sendMessage(chatId, `https://t.me/addstickers/${name}`)
-    }
-
-    // #dc
-    {
     }
   } catch (error) {
     console.log(error)
