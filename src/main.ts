@@ -1,6 +1,13 @@
 import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai"
-import { config, configDotenv } from "dotenv"
-import TelegramBot = require("node-telegram-bot-api")
+import { config } from "dotenv"
+import TelegramBot from "node-telegram-bot-api"
+import { JSDOM } from "jsdom"
+import fetch from "node-fetch"
+import sharp from "sharp"
+import path from "path"
+import Ffmpeg from "fluent-ffmpeg"
+import { fetchAndConvert } from "./utils"
+import { Writable, Stream } from "stream"
 
 config()
 
@@ -48,6 +55,12 @@ bot.onText(/\/start/, (msg) => {
   bot.sendMessage(msg.chat.id, "털쥐를 불러주세요.")
 })
 
+bot.onText(/\/help/, (msg) => {
+  bot.sendMessage(msg.chat.id, "/sticker (arca|dc) ({url}|{id})")
+  bot.sendMessage(msg.chat.id, "/sticker arca 32865")
+  bot.sendMessage(msg.chat.id, "/sticker arca https://arca.live/e/20479?p=1")
+})
+
 bot.onText(/\/debug/, async (msg) => {
   const chatId = msg.chat.id
   await bot.sendMessage(chatId, JSON.stringify(msg, null, 4))
@@ -55,26 +68,131 @@ bot.onText(/\/debug/, async (msg) => {
   console.log(chatId, JSON.stringify(messages[chatId], null, 4))
 })
 
-bot.on("message", async (msg) => {
+bot.onText(/\/sticker (arca|dc) (\d+)/, async (msg, match) => {
+  const chatId = msg.chat.id
+  const chatType = msg.chat.type
+  const userId = msg.from?.id
+  if (userId === undefined) return
+
+  if (chatType !== "private") {
+    await bot.sendMessage(chatId, `개인적으로 요청해라냥😿`)
+    return
+  }
+
   try {
-    const input = msg.text
+    const platform = match![1]
+    const id = match![2]
+    await bot.sendMessage(chatId, `아직 개발중이다냥😿`)
+    // "https://dccon.dcinside.com/hot/1/tags/주술#86343"
+
+    // #arca
+    {
+      const url = "https://arca.live/e/" + id
+      const dom = await JSDOM.fromURL(url)
+      const emoticonTitle = dom.window.document
+        .querySelector(
+          "body > div.root-container > div.content-wrapper.clearfix > article > div > div.article-wrapper > div.article-head > div.title-row > div"
+        )
+        ?.textContent?.trim()
+
+      if (emoticonTitle === undefined) throw new Error()
+
+      const name = `arca_${id}_by_misa_chat_bot`
+      const title = `${emoticonTitle} By @misa_chat_bot`
+      const emoticonElements = dom.window.document.querySelectorAll(
+        ".emoticons-wrapper > .emoticon"
+      )
+      const emoticonUrls: string[] = []
+
+      for (const element of emoticonElements) {
+        emoticonUrls.push(`https:${element.getAttribute("src")}`)
+      }
+
+      if (emoticonUrls.length === 0) throw new Error("empty emoticonUrls")
+
+      const thumbnailBuffer = await fetch(emoticonUrls.shift()!)
+        .then(async (response) => await response.buffer())
+        .catch((error) => {
+          throw new Error(error)
+        })
+
+      // console.log(emoticonUrls)
+      console.log(name)
+      console.log(title)
+      console.log(`https://t.me/addstickers/${name}`)
+
+      await bot.createNewStickerSet(
+        userId,
+        name,
+        title,
+        await sharp(thumbnailBuffer).resize(512, 512).toBuffer(),
+        "🔖",
+        {},
+        { filename: name, contentType: "application/octet-stream" }
+      )
+
+      for await (const url of emoticonUrls) {
+        console.log(url)
+        const ext = path.extname(new URL(url).pathname).slice(1)
+        if (ext !== "mp4") continue
+
+        // png_sticker
+        // For stickers, one side must be exactly 512 pixels in size – the other side can be 512 pixels or less.
+        // For emoji, images must be exactly 100x100 pixels in size.
+        // The image file must be in either .PNG or .WEBP format.
+        if (["png"].includes(ext)) {
+          bot.sendChatAction(chatId, "upload_photo")
+          let buffer = await fetch(url)
+            .then(async (response) => await response.buffer())
+            .catch((error) => {
+              throw new Error(error)
+            })
+          buffer = await sharp(buffer)
+            .resize(512, 512)
+            .toFormat("png")
+            .toBuffer()
+
+          await bot.addStickerToSet(userId, name, buffer, "🔖", "png_sticker")
+        }
+
+        // TODO: webm_sticker
+        // For stickers, one side must be exactly 512 pixels in size – the other side can be 512 pixels or less.
+        // Video duration must not exceed 3 seconds.
+        // Frame rate can be up to 30 FPS.
+        // Video should be looped for optimal user experience.
+        // Video size should not exceed 256 KB.
+        // Video must be in .WEBM format encoded with the VP9 codec.
+        // Video must have no audio stream.
+        if (["mp4"].includes(ext)) {
+          bot.sendChatAction(chatId, "upload_video")
+          const stream = await fetchAndConvert(url)
+
+          await bot.addStickerToSet(userId, name, stream, "🔖", "webm_sticker")
+        }
+      }
+
+      await bot.sendMessage(chatId, `https://t.me/addstickers/${name}`)
+    }
+
+    // #dc
+    {
+    }
+  } catch (error) {
+    console.log(error)
+    await bot.sendMessage(chatId, `에러났다냥😿 ${error}`)
+  }
+})
+
+bot.onText(/.*(털쥐|프칫).*/, async (msg) => {
+  try {
+    const input = msg!.text!
     const chatType = msg.chat.type
     const chatId = msg.chat.id
     const username = msg.from?.id.toString()
 
-    if (typeof input !== "string") return
-
     if (messages[chatId] === undefined) initChatRoom(msg)
 
     console.log(chatType, chatId, username, "input:", input)
-
-    if (
-      !input.toString().toLowerCase().includes("털쥐") &&
-      !input.toString().toLowerCase().includes("프칫") &&
-      chatType !== "private"
-    ) {
-      return
-    }
 
     // do job
     if (input.toString().toLocaleLowerCase().includes("그려줘")) {
