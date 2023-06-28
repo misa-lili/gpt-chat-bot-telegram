@@ -56,6 +56,11 @@ bot.onText(/\/start/, (msg) => {
 
 bot.onText(/\/help/, async (msg) => {
   const chatId = msg.chat.id
+  if (msg.chat.type !== "private") {
+    await bot.sendMessage(chatId, `개인적으로 요청해라냥😿`)
+    return
+  }
+
   await bot.sendMessage(chatId, "https://arca.live/e/")
   await bot.sendMessage(chatId, "위 주소에서 원하는 스티커를 찾아서")
   await bot.sendMessage(chatId, "페이지로 들어가서 주소를 확인합니다.")
@@ -82,7 +87,7 @@ bot.onText(/\/sticker (arca|dc) (\d+)/, async (msg, match) => {
 
   console.log(userId)
 
-  if (chatType !== "private") {
+  if (msg.chat.type !== "private") {
     await bot.sendMessage(chatId, `개인적으로 요청해라냥😿`)
     return
   }
