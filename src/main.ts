@@ -5,10 +5,11 @@ import { JSDOM } from "jsdom"
 import fetch from "node-fetch"
 import sharp from "sharp"
 import path from "path"
-import { convertToWebmBuffer, convertToWebmStream } from "./utils"
+import { convertToWebmBuffer } from "./utils"
+import { test } from "./test"
 
 config()
-
+test()
 /**
  * TELEGRAM CONFIGURATION
  */
@@ -72,6 +73,8 @@ bot.onText(/\/sticker (arca|dc) (\d+)/, async (msg, match) => {
   const userId = msg.from?.id
   if (userId === undefined) return
 
+  console.log(userId)
+
   if (chatType !== "private") {
     await bot.sendMessage(chatId, `개인적으로 요청해라냥😿`)
     return
@@ -134,7 +137,6 @@ bot.onText(/\/sticker (arca|dc) (\d+)/, async (msg, match) => {
       for await (const url of emoticonUrls) {
         console.log(url)
         const ext = path.extname(new URL(url).pathname).slice(1)
-        if (ext !== "mp4") continue
 
         // png_sticker
         // For stickers, one side must be exactly 512 pixels in size – the other side can be 512 pixels or less.
@@ -155,7 +157,7 @@ bot.onText(/\/sticker (arca|dc) (\d+)/, async (msg, match) => {
           await bot.addStickerToSet(userId, name, sticker, "🔖", "png_sticker")
         }
 
-        // TODO: webm_sticker
+        // webm_sticker
         // For stickers, one side must be exactly 512 pixels in size – the other side can be 512 pixels or less.
         // Video duration must not exceed 3 seconds.
         // Frame rate can be up to 30 FPS.
@@ -167,20 +169,24 @@ bot.onText(/\/sticker (arca|dc) (\d+)/, async (msg, match) => {
           bot.sendChatAction(chatId, "upload_video")
           const sticker = await convertToWebmBuffer(url)
 
-          await bot.sendVideo(chatId, sticker)
-
-          // await bot.addStickerToSet(
-          //   userId,
-          //   name,
-          //   sticker,
-          //   "🔖",
-          //   "webm_sticker",
-          //   {},
-          //   { filename: url, contentType: "application/octet-stream" }
-          // )
+          try {
+            await bot.addStickerToSet(
+              userId,
+              name,
+              sticker,
+              "🔖",
+              "webm_sticker"
+            )
+          } catch (error) {
+            console.error("ERR!!", error)
+            continue
+          }
         }
       }
 
+      const stickerSet = await bot.getStickerSet(name)
+      bot.sendChatAction(chatId, "choose_sticker" as any)
+      await bot.sendSticker(chatId, stickerSet.stickers[0].file_id)
       await bot.sendMessage(chatId, `https://t.me/addstickers/${name}`)
     }
   } catch (error) {
