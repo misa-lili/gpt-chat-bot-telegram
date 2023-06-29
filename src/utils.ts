@@ -32,11 +32,13 @@ export const convertToWebm = async (url: string): Promise<Buffer> => {
       Video must have no audio stream.
     */
     // TODO: loop and speed and duration
+    // TODO: .videoFilters('setpts=PTS/2') <- arca 의 max 시간 확인해서 적용
+
     ffmpeg()
       .input(readableStream)
       .output(passThrough)
       .fps(24)
-      .videoBitrate("256k", true)
+      .videoBitrate("512k", true)
       .duration(2.98)
       .size("512x512")
       .videoCodec("libvpx-vp9")
