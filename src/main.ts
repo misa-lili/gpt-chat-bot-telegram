@@ -106,18 +106,6 @@ bot.onText(/\/sticker (arca) (\d+)/, async (msg, match) => {
   try {
     const platform = match![1]
     const id = match![2]
-    const name = `arca_${id}_by_misa_chat_bot`
-
-    // 존재하는 스티커인지 확인하여 주소를 전송하고 리턴합니다.
-    try {
-      const stickerSet = await getStickerSet({ name })
-      await bot.sendChatAction(chatId, "typing")
-      await bot.sendMessage(chatId, `이미 존재하는 스티커다냥😽`)
-      await bot.sendChatAction(chatId, "choose_sticker" as any)
-      await bot.sendSticker(chatId, stickerSet.stickers[0].file_id)
-      await bot.sendMessage(chatId, `https://t.me/addstickers/${name}`)
-      return
-    } catch (error) {}
 
     await bot.sendMessage(chatId, `기다려라냥😿`)
 
@@ -132,7 +120,7 @@ bot.onText(/\/sticker (arca) (\d+)/, async (msg, match) => {
 
     if (emoticonTitle === undefined) throw new Error()
 
-    const title = `${emoticonTitle} By @misa_chat_bot`
+    // const title = `${emoticonTitle} By @misa_chat_bot`
     const emoticonElements = dom.window.document.querySelectorAll(
       ".emoticons-wrapper > .emoticon"
     )
@@ -148,15 +136,46 @@ bot.onText(/\/sticker (arca) (\d+)/, async (msg, match) => {
 
     if (emoticonUrls.length === 0) throw new Error("empty emoticonUrls")
 
+    // 존재하는 스티커인지 확인하여 주소를 전송하고 리턴합니다.
+    try {
+      const length = Math.ceil(emoticonElements.length / 50)
+      const name =
+        length === 1
+          ? `arca_${id}_by_misa_chat_bot`
+          : `arca_${id}_1_${length}_by_misa_chat_bot`
+      // 존재하지 않으면 여기서 throw error 로 나가게됨
+      const stickerSet = await getStickerSet({ name })
+      await bot.sendChatAction(chatId, "typing")
+      await bot.sendMessage(chatId, `이미 존재하는 스티커다냥😽`)
+
+      for (let i = 0; i < length; i++) {
+        const name =
+          length === 1
+            ? `arca_${id}_by_misa_chat_bot`
+            : `arca_${id}_${i + 1}_${length}_by_misa_chat_bot`
+        const title =
+          length === 1
+            ? `${emoticonTitle} By @misa_chat_bot`
+            : `${emoticonTitle}(${i + 1}/${length}) By @misa_chat_bot`
+
+        const stickerSet = await getStickerSet({ name })
+        await bot.sendChatAction(chatId, "choose_sticker" as any)
+        await bot.sendSticker(chatId, stickerSet.stickers[0].file_id)
+        await bot.sendMessage(chatId, stickerSet.title.split("").join(" "))
+        await bot.sendMessage(chatId, `https://t.me/addstickers/${name}`)
+      }
+      return
+    } catch (error) {}
+
     let stickers: BotAPI.InputSticker[] = []
     for await (const url of emoticonUrls) {
-      console.log(url)
       bot.sendChatAction(chatId, "choose_sticker" as any)
       const buffer = await convertToWebm(url)
       const file = await uploadStickerFile({
         user_id: userId,
         sticker: buffer,
         sticker_format: "video",
+        url,
       })
       const InputSticker: BotAPI.InputSticker = {
         sticker: file.file_id,
@@ -167,22 +186,35 @@ bot.onText(/\/sticker (arca) (\d+)/, async (msg, match) => {
     }
 
     bot.sendChatAction(chatId, "choose_sticker" as any)
-    // TODO: 50개씩 끊어서 업로드 해야합니다.
-    await createNewStickerSet({
-      user_id: userId,
-      name,
-      title,
-      stickers,
-      sticker_format: "video",
-    })
 
-    bot.sendChatAction(chatId, "choose_sticker" as any)
+    // 50개씩 끊어서 업로드 해야합니다.
+    const length = Math.ceil(stickers.length / 50)
+    for (let i = 0; i < length; i += 1) {
+      const name =
+        length === 1
+          ? `arca_${id}_by_misa_chat_bot`
+          : `arca_${id}_${i + 1}_${length}_by_misa_chat_bot`
+      const title =
+        length === 1
+          ? `${emoticonTitle} By @misa_chat_bot`
+          : `${emoticonTitle}(${i + 1}/${length}) By @misa_chat_bot`
+      await createNewStickerSet({
+        user_id: userId,
+        name,
+        title,
+        stickers: stickers.slice(i * 50, (i + 1) * 50),
+        sticker_format: "video",
+      })
+      bot.sendChatAction(chatId, "choose_sticker" as any)
 
-    const newStickerSet = await getStickerSet({ name })
-
-    await bot.sendSticker(chatId, newStickerSet.stickers[0].file_id)
-    await bot.sendMessage(chatId, title.split("").join(" "))
-    await bot.sendMessage(chatId, `https://t.me/addstickers/${name}`)
+      const stickerSet = await getStickerSet({ name })
+      await bot.sendSticker(chatId, stickerSet.stickers[0].file_id)
+      await bot.sendMessage(chatId, stickerSet.title.split("").join(" "))
+      await bot.sendMessage(
+        chatId,
+        `https://t.me/addstickers/${stickerSet.name}`
+      )
+    }
   } catch (error) {
     await bot.sendMessage(chatId, `에러났다냥😿 ${error}`)
   }

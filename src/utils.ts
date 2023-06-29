@@ -88,15 +88,19 @@ export async function uploadStickerFile({
   user_id,
   sticker,
   sticker_format,
+  url,
 }: {
   user_id: number
   sticker: BotAPI.InputFile
   sticker_format: "static" | "animated" | "video"
+  url: string
 }): Promise<BotAPI.File> {
   const form = new FormData()
+  const filename = simpleHash(url) + ".webm"
+  console.log(filename)
   form.append("user_id", user_id)
   form.append("sticker", sticker, {
-    filename: crypto.randomUUID() + ".webm",
+    filename,
     contentType: "video/webm",
   })
   form.append("sticker_format", sticker_format)
@@ -147,7 +151,7 @@ export async function createNewStickerSet({
   const data = await response.json()
   if (data.ok === false) {
     console.log(data)
-    throw new Error("ok === false")
+    throw new Error(data.description)
   }
   return data
 }
@@ -224,4 +228,14 @@ export async function sendMessage({
   console.log(response.ok, res2.ok, resp3.ok)
 
   return data
+}
+
+export function simpleHash(input: string): string {
+  let hash = 0
+  for (let i = 0; i < input.length; i++) {
+    let char = input.charCodeAt(i)
+    hash = (hash << 5) - hash + char
+    hash = hash & hash // Convert to 32bit integer
+  }
+  return hash.toString()
 }

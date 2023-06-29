@@ -40,6 +40,7 @@ export async function test() {
     user_id,
     sticker: buffer,
     sticker_format: "video",
+    url: imgUrl,
   })
 
   const InputSticker: BotAPI.InputSticker = {
