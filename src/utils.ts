@@ -26,10 +26,12 @@ export const convertToWebm = async (url: string): Promise<Buffer> => {
       .output(passThrough)
       .size("512x512")
       .videoCodec("libvpx-vp9")
+      .videoBitrate("64k", true)
       .outputFormat("webm")
       .noAudio()
       .addOptions("-pix_fmt yuva420p")
-      .on("end", function () {
+      .on("end", function (_, stdout) {
+        console.log(stdout)
         resolve(Buffer.concat(chunks))
       })
       .on("error", reject)
@@ -55,7 +57,8 @@ export async function getStickerSet({
   )
   const data = await response.json()
   if (data.ok === false) {
-    console.log(data)
+    // console.error("getStickerSet")
+    // console.error(data)
     throw new Error(data.description)
   }
   return data.result
@@ -77,7 +80,8 @@ export async function deleteStickerSet({
   )
   const data = await response.json()
   if (data.ok === false) {
-    console.log(data)
+    console.error("deleteStickerSet")
+    console.error(data)
     throw new Error(data.description)
   }
   return data.result
@@ -113,7 +117,8 @@ export async function uploadStickerFile({
   )
   const data = await response.json()
   if (response.ok === false) {
-    console.log(data)
+    console.error("uploadStickerFile")
+    console.error(data)
     throw new Error(data.description)
   }
   return data.result
@@ -155,7 +160,8 @@ export async function createNewStickerSet({
   )
   const data = await response.json()
   if (data.ok === false) {
-    console.log(data)
+    console.error("createNewStickerSet")
+    console.error(data)
     throw new Error(data.description)
   }
   return data
@@ -184,7 +190,8 @@ export async function addStickerToSet({
   )
   const data = await response.json()
   if (response.ok === false) {
-    console.log(data)
+    console.error("addStickerToSet")
+    console.error(data)
     throw new Error(data.description)
   }
   return data.result
