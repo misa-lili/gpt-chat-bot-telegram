@@ -1,10 +1,5 @@
 import { config } from "dotenv"
-import {
-  convertToWebm,
-  createNewStickerSet,
-  sendMessage,
-  uploadStickerFile,
-} from "./utils"
+import { convertToWebm, createNewStickerSet, uploadStickerFile } from "./utils"
 import fs from "fs"
 
 config()
