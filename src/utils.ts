@@ -37,6 +37,7 @@ export const convertToWebm = async (url: string): Promise<Buffer> => {
       .output(passThrough)
       .fps(24)
       .videoBitrate("256k", true)
+      .duration(2.98)
       .size("512x512")
       .videoCodec("libvpx-vp9")
       .outputFormat("webm")
