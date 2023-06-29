@@ -144,7 +144,7 @@ bot.onText(/\/sticker (arca) (\d+)/, async (msg, match) => {
           ? `arca_${id}_by_misa_chat_bot`
           : `arca_${id}_1_${length}_by_misa_chat_bot`
       // 존재하지 않으면 여기서 throw error 로 나가게됨
-      const stickerSet = await getStickerSet({ name })
+      await getStickerSet({ name })
       await bot.sendChatAction(chatId, "typing")
       await bot.sendMessage(chatId, `이미 존재하는 스티커다냥😽`)
 
