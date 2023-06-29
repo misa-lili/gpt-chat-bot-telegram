@@ -1,21 +1,40 @@
 import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai"
 import { config } from "dotenv"
-import TelegramBot from "node-telegram-bot-api"
+import TelegramBot, { PhotoSize, Sticker } from "node-telegram-bot-api"
 import { JSDOM } from "jsdom"
 import fetch from "node-fetch"
 import sharp from "sharp"
 import path from "path"
-import { convertToWebmBuffer } from "./utils"
+import {
+  addStickerToSet,
+  convertToWebm,
+  createNewStickerSet,
+  deleteStickerSet,
+  getStickerSet,
+  sendMessage,
+  uploadStickerFile,
+} from "./utils"
 import { test } from "./test"
 
+interface StickerSet {
+  name: string
+  title: string
+  sticker_type: string
+  is_animated: boolean
+  is_video: boolean
+  stickers: Sticker[]
+  thumbnail: PhotoSize
+}
+
 config()
-test()
+// test()
+
 /**
  * TELEGRAM CONFIGURATION
  */
 const token = process.env.TELEGRAM_TOKEN
-const bot = new TelegramBot(token!, { polling: true })
-const chats = {}
+if (token === undefined) throw new Error("No env: TELEGRAM_TOKEN")
+const bot = new TelegramBot(token, { polling: true })
 
 /**
  * CHAT-GPT CONFIGURATION
@@ -79,15 +98,13 @@ bot.onText(/\/debug/, async (msg) => {
   console.log(chatId, JSON.stringify(messages[chatId], null, 4))
 })
 
-bot.onText(/\/sticker (arca|dc) (\d+)/, async (msg, match) => {
+bot.onText(/\/sticker (arca) (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id
   const chatType = msg.chat.type
   const userId = msg.from?.id
   if (userId === undefined) return
 
-  console.log(userId)
-
-  if (msg.chat.type !== "private") {
+  if (chatType !== "private") {
     await bot.sendMessage(chatId, `개인적으로 요청해라냥😿`)
     return
   }
@@ -95,114 +112,105 @@ bot.onText(/\/sticker (arca|dc) (\d+)/, async (msg, match) => {
   try {
     const platform = match![1]
     const id = match![2]
-    await bot.sendMessage(chatId, `기다려라냥😿`)
+    const name = `arca_${id}_by_misa_chat_bot`
 
-    // #arca
-    {
-      const url = "https://arca.live/e/" + id
-      const dom = await JSDOM.fromURL(url)
-      const emoticonTitle = dom.window.document
-        .querySelector(
-          "body > div.root-container > div.content-wrapper.clearfix > article > div > div.article-wrapper > div.article-head > div.title-row > div"
-        )
-        ?.textContent?.trim()
-
-      if (emoticonTitle === undefined) throw new Error()
-
-      const name = `arca_${id}_by_misa_chat_bot`
-      const title = `${emoticonTitle} By @misa_chat_bot`
-      const emoticonElements = dom.window.document.querySelectorAll(
-        ".emoticons-wrapper > .emoticon"
-      )
-      const emoticonUrls: string[] = []
-
-      for (const element of emoticonElements) {
-        emoticonUrls.push(`https:${element.getAttribute("src")}`)
-      }
-
-      if (emoticonUrls.length === 0) throw new Error("empty emoticonUrls")
-
-      const thumbnailBuffer = await fetch(emoticonUrls.shift()!)
-        .then(async (response) => await response.buffer())
-        .catch((error) => {
-          throw new Error(error)
-        })
-
-      // console.log(emoticonUrls)
-      console.log(name)
-      console.log(title)
-      console.log(`https://t.me/addstickers/${name}`)
-
-      const buffer = await sharp(thumbnailBuffer).resize(512, 512).toBuffer()
-
-      await bot.createNewStickerSet(
-        userId,
-        name,
-        title,
-        buffer,
-        "🔖",
-        {},
-        { filename: name, contentType: "application/octet-stream" }
-      )
-
-      for await (const url of emoticonUrls) {
-        console.log(url)
-        const ext = path.extname(new URL(url).pathname).slice(1)
-
-        // png_sticker
-        // For stickers, one side must be exactly 512 pixels in size – the other side can be 512 pixels or less.
-        // For emoji, images must be exactly 100x100 pixels in size.
-        // The image file must be in either .PNG or .WEBP format.
-        if (["png"].includes(ext)) {
-          bot.sendChatAction(chatId, "upload_photo")
-          let sticker = await fetch(url)
-            .then(async (response) => await response.buffer())
-            .catch((error) => {
-              throw new Error(error)
-            })
-          sticker = await sharp(sticker)
-            .resize(512, 512)
-            .toFormat("png")
-            .toBuffer()
-
-          await bot.addStickerToSet(userId, name, sticker, "🔖", "png_sticker")
-        }
-
-        // webm_sticker
-        // For stickers, one side must be exactly 512 pixels in size – the other side can be 512 pixels or less.
-        // Video duration must not exceed 3 seconds.
-        // Frame rate can be up to 30 FPS.
-        // Video should be looped for optimal user experience.
-        // Video size should not exceed 256 KB.
-        // Video must be in .WEBM format encoded with the VP9 codec.
-        // Video must have no audio stream.
-        if (["mp4"].includes(ext)) {
-          bot.sendChatAction(chatId, "upload_video")
-          const sticker = await convertToWebmBuffer(url)
-
-          try {
-            await bot.addStickerToSet(
-              userId,
-              name,
-              sticker,
-              "🔖",
-              "webm_sticker"
-            )
-          } catch (error) {
-            console.error("ERR!!", error)
-            continue
-          }
-        }
-      }
-
-      const stickerSet = await bot.getStickerSet(name)
-      bot.sendChatAction(chatId, "choose_sticker" as any)
+    // 존재하는 스티커인지 확인하여 주소를 전송하고 리턴합니다.
+    try {
+      const stickerSet = await getStickerSet({ name })
+      await bot.sendChatAction(chatId, "typing")
+      await bot.sendMessage(chatId, `이미 존재하는 스티커다냥😽`)
+      await bot.sendChatAction(chatId, "choose_sticker" as any)
       await bot.sendSticker(chatId, stickerSet.stickers[0].file_id)
       await bot.sendMessage(chatId, `https://t.me/addstickers/${name}`)
+      return
+    } catch (error) {}
+
+    await bot.sendMessage(chatId, `기다려라냥😿`)
+
+    // 아카콘의 경우의 진행
+    const url = "https://arca.live/e/" + id
+    const dom = await JSDOM.fromURL(url)
+    const emoticonTitle = dom.window.document
+      .querySelector(
+        "body > div.root-container > div.content-wrapper.clearfix > article > div > div.article-wrapper > div.article-head > div.title-row > div"
+      )
+      ?.textContent?.trim()
+
+    if (emoticonTitle === undefined) throw new Error()
+
+    const title = `${emoticonTitle} By @misa_chat_bot`
+    const emoticonElements = dom.window.document.querySelectorAll(
+      ".emoticons-wrapper > .emoticon"
+    )
+    const emoticonUrls: string[] = []
+
+    for (const element of emoticonElements) {
+      emoticonUrls.push(`https:${element.getAttribute("src")}`)
+    }
+
+    if (emoticonUrls.length === 0) throw new Error("empty emoticonUrls")
+
+    let stickers: BotAPI.InputSticker[] = []
+    for await (const url of emoticonUrls) {
+      console.log(url)
+      bot.sendChatAction(chatId, "choose_sticker" as any)
+      const buffer = await convertToWebm(url)
+      const file = await uploadStickerFile({
+        user_id: userId,
+        sticker: buffer,
+        sticker_format: "video",
+      })
+      const InputSticker: BotAPI.InputSticker = {
+        sticker: file.file_id,
+        emoji_list: ["🔖"],
+      }
+      // await addStickerToSet({ user_id: userId, name, sticker: InputSticker })
+      stickers.push(InputSticker)
+    }
+
+    bot.sendChatAction(chatId, "choose_sticker" as any)
+    await createNewStickerSet({
+      user_id: userId,
+      name,
+      title,
+      stickers,
+      sticker_format: "video",
+    })
+
+    bot.sendChatAction(chatId, "choose_sticker" as any)
+
+    const newStickerSet = await getStickerSet({ name })
+
+    await bot.sendSticker(chatId, newStickerSet.stickers[0].file_id)
+    await bot.sendMessage(chatId, `https://t.me/addstickers/${name}`)
+  } catch (error) {
+    console.error(error)
+    await bot.sendMessage(chatId, `에러났다냥😿 ${error}`)
+  }
+})
+
+bot.onText(/\/delete (arca) (\d+)/, async (msg, match) => {
+  try {
+    const chatId = msg.chat.id
+    const chatType = msg.chat.type
+    const userId = msg.from?.id
+    if (userId === undefined) return
+
+    if (chatType !== "private") {
+      await bot.sendMessage(chatId, `개인적으로 요청해라냥😿`)
+      return
+    }
+    const platform = match![1]
+    const id = match![2]
+    const name = `arca_${id}_by_misa_chat_bot`
+
+    const result = await deleteStickerSet({ name })
+    if (result === true) {
+      bot.sendChatAction(chatId, "typing")
+      await bot.sendMessage(chatId, "성공적으로 삭제됐다냥")
     }
   } catch (error) {
-    console.log(error)
-    await bot.sendMessage(chatId, `에러났다냥😿 ${error}`)
+    console.error(error)
   }
 })
 
