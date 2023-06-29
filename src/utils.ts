@@ -31,7 +31,7 @@ export const convertToWebm = async (url: string): Promise<Buffer> => {
       .noAudio()
       .addOptions("-pix_fmt yuva420p")
       .on("end", function (_, stdout) {
-        console.log(stdout)
+        // console.log(stdout)
         resolve(Buffer.concat(chunks))
       })
       .on("error", reject)
