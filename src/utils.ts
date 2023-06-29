@@ -22,13 +22,24 @@ export const convertToWebm = async (url: string): Promise<Buffer> => {
     const passThrough = new stream.PassThrough()
 
     // TODO: loop and speed and duration
+    /**
+     * For stickers, one side must be exactly 512 pixels in size – the other side can be 512 pixels or less.
+For emoji, the video must be exactly 100x100 pixels in size
+Video duration must not exceed 3 seconds.
+Frame rate can be up to 30 FPS.
+Video should be looped for optimal user experience.
+Video size should not exceed 256 KB.
+Video must be in .WEBM format encoded with the VP9 codec.
+Video must have no audio stream.
+     */
 
     ffmpeg()
       .input(readableStream)
       .output(passThrough)
+      .fps(24)
+      .videoBitrate("192k", true)
       .size("512x512")
       .videoCodec("libvpx-vp9")
-      .videoBitrate("64k", true)
       .outputFormat("webm")
       .noAudio()
       .addOptions("-pix_fmt yuva420p")
