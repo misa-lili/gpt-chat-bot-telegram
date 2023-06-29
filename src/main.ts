@@ -64,7 +64,7 @@ function initChatRoom(msg: TelegramBot.Message) {
  * LISTEN TO BOT
  */
 bot.onText(/\/start/, (msg) => {
-  bot.sendMessage(msg.chat.id, "털쥐를 불러주세요.")
+  bot.sendMessage(msg.chat.id, "털쥐다냥😸")
 })
 
 bot.onText(/\/help/, async (msg) => {
@@ -75,14 +75,18 @@ bot.onText(/\/help/, async (msg) => {
   }
 
   await bot.sendMessage(chatId, "https://arca.live/e/")
-  await bot.sendMessage(chatId, "위 주소에서 원하는 스티커를 찾아서")
-  await bot.sendMessage(chatId, "페이지로 들어가서 주소를 확인합니다.")
-  await bot.sendMessage(chatId, "https://arca.live/e/아이디")
-  await bot.sendMessage(chatId, "주소 해당 부분의 아이디 숫자를 기억한 후")
+  await bot.sendMessage(chatId, "여기 주소에서 맘에 드는 스티커를 찾아봐라냥😻")
+  await bot.sendMessage(chatId, "그리고 주소를 봐라냥😼")
+  await bot.sendMessage(chatId, "https://arca.live/e/아이디?어쩌고저쩌고")
+  await bot.sendMessage(
+    chatId,
+    "주소에서 e/ 뒤 부터 ? 앞 까지의 부분에 숫자로된 아이디가 있다냥"
+  )
+  await bot.sendMessage(chatId, "숫자예시) 20479")
+  await bot.sendMessage(chatId, "잘 기억한 다음에...🙀")
   await bot.sendMessage(chatId, "/sticker arca 아이디")
-  await bot.sendMessage(chatId, "위와 같이 입력해 주세요")
+  await bot.sendMessage(chatId, "위 처럼 입력하라냥😽")
   await bot.sendMessage(chatId, "입력예시) /sticker arca 20479")
-  await bot.sendMessage(chatId, "다른 플랫폼, 움직이는 스티커는 아직입니다.")
 })
 
 bot.onText(/\/debug/, async (msg) => {
@@ -107,7 +111,7 @@ bot.onText(/\/sticker (arca) (\d+)/, async (msg, match) => {
     const platform = match![1]
     const id = match![2]
 
-    await bot.sendMessage(chatId, `기다려라냥😿`)
+    await bot.sendMessage(chatId, `기다려라냥😽`)
 
     // 아카콘의 경우의 진행
     const url = "https://arca.live/e/" + id
@@ -238,7 +242,7 @@ bot.onText(/\/delete (arca) (\d+)/, async (msg, match) => {
     const result = await deleteStickerSet({ name })
     if (result === true) {
       bot.sendChatAction(chatId, "typing")
-      await bot.sendMessage(chatId, "성공적으로 삭제됐다냥")
+      await bot.sendMessage(chatId, "잘 삭제됐다냥😽")
     }
   } catch (error) {
     console.error(error)
