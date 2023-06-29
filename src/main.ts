@@ -172,8 +172,9 @@ bot.onText(/\/sticker (arca) (\d+)/, async (msg, match) => {
     } catch (error) {}
 
     let stickers: BotAPI.InputSticker[] = []
-    for await (const url of emoticonUrls) {
+    for await (const [index, url] of emoticonUrls.entries()) {
       bot.sendChatAction(chatId, "choose_sticker" as any)
+      console.log(`convert and upload (${index + 1}/${emoticonUrls.length})`)
       const buffer = await convertToWebm(url)
       const file = await uploadStickerFile({
         user_id: userId,

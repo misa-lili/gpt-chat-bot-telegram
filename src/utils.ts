@@ -21,6 +21,8 @@ export const convertToWebm = async (url: string): Promise<Buffer> => {
     const chunks: Uint8Array[] = []
     const passThrough = new stream.PassThrough()
 
+    // TODO: loop and speed and duration
+
     ffmpeg()
       .input(readableStream)
       .output(passThrough)
@@ -103,7 +105,6 @@ export async function uploadStickerFile({
 }): Promise<BotAPI.File> {
   const form = new FormData()
   const filename = simpleHash(url) + ".webm"
-  console.log(filename)
   form.append("user_id", user_id)
   form.append("sticker", sticker, {
     filename,
