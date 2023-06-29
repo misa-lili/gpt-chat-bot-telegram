@@ -80,9 +80,9 @@ bot.onText(/\/help/, async (msg) => {
   await bot.sendMessage(chatId, "https://arca.live/e/아이디?어쩌고저쩌고")
   await bot.sendMessage(
     chatId,
-    "주소에서 e/ 뒤 부터 ? 앞 까지의 부분에 숫자로된 아이디가 있다냥"
+    "주소에서 e/ 다음 부터 ? 직전 까지의 부분에 숫자로된 아이디가 있다냥😾"
   )
-  await bot.sendMessage(chatId, "숫자예시) 20479")
+  await bot.sendMessage(chatId, "아이디예시) 20479")
   await bot.sendMessage(chatId, "잘 기억한 다음에...🙀")
   await bot.sendMessage(chatId, "/sticker arca 아이디")
   await bot.sendMessage(chatId, "위 처럼 입력하라냥😽")
