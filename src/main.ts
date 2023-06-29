@@ -2,19 +2,13 @@ import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai"
 import { config } from "dotenv"
 import TelegramBot, { PhotoSize, Sticker } from "node-telegram-bot-api"
 import { JSDOM } from "jsdom"
-import fetch from "node-fetch"
-import sharp from "sharp"
-import path from "path"
 import {
-  addStickerToSet,
   convertToWebm,
   createNewStickerSet,
   deleteStickerSet,
   getStickerSet,
-  sendMessage,
   uploadStickerFile,
 } from "./utils"
-import { test } from "./test"
 
 interface StickerSet {
   name: string
@@ -145,7 +139,7 @@ bot.onText(/\/sticker (arca) (\d+)/, async (msg, match) => {
     const emoticonUrls: string[] = []
 
     for (const element of emoticonElements) {
-      emoticonUrls.push(`https:${element.getAttribute("src")}`)
+      emoticonUrls.push(`https:${element.getAttribute("data-src")}`)
     }
 
     if (emoticonUrls.length === 0) throw new Error("empty emoticonUrls")
@@ -184,7 +178,7 @@ bot.onText(/\/sticker (arca) (\d+)/, async (msg, match) => {
     await bot.sendSticker(chatId, newStickerSet.stickers[0].file_id)
     await bot.sendMessage(chatId, `https://t.me/addstickers/${name}`)
   } catch (error) {
-    console.error(error)
+    // console.error(error)
     await bot.sendMessage(chatId, `에러났다냥😿 ${error}`)
   }
 })
