@@ -71,7 +71,7 @@ export async function getStickerSet({
   if (data.ok === false) {
     // console.error("getStickerSet")
     // console.error(data)
-    throw new Error("getStickerSet")
+    throw new Error("getStickerSet" + data.description)
   }
   return data.result
 }
@@ -94,7 +94,7 @@ export async function deleteStickerSet({
   if (data.ok === false) {
     console.error("deleteStickerSet")
     console.error(data)
-    throw new Error("deleteStickerSet")
+    throw new Error("deleteStickerSet" + data.description)
   }
   return data.result
 }
@@ -130,7 +130,7 @@ export async function uploadStickerFile({
   if (response.ok === false) {
     console.error("uploadStickerFile")
     console.error(data)
-    throw new Error("uploadStickerFile")
+    throw new Error("uploadStickerFile" + data.description)
   }
   return data.result
 }
@@ -173,7 +173,7 @@ export async function createNewStickerSet({
   if (data.ok === false) {
     console.error("createNewStickerSet")
     console.error(data)
-    throw new Error("createNewStickerSet")
+    throw new Error("createNewStickerSet" + data.description)
   }
   return data
 }
@@ -203,7 +203,7 @@ export async function addStickerToSet({
   if (response.ok === false) {
     console.error("addStickerToSet")
     console.error(data)
-    throw new Error("addStickerToSet")
+    throw new Error("addStickerToSet" + data.description)
   }
   return data.result
 }

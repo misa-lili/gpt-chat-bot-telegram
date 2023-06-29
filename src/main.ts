@@ -29,6 +29,7 @@ config()
 const token = process.env.TELEGRAM_TOKEN
 if (token === undefined) throw new Error("No env: TELEGRAM_TOKEN")
 const bot = new TelegramBot(token, { polling: true })
+const owner = 873486701
 
 /**
  * CHAT-GPT CONFIGURATION
@@ -188,7 +189,9 @@ bot.onText(/\/sticker arca (\d+)/, async (msg, match) => {
       )
     }
   } catch (error) {
+    console.error(error)
     await bot.sendMessage(chatId, `에러났다냥😿`)
+    if (owner) await bot.sendMessage(chatId, `${error}`)
   }
 })
 
@@ -221,7 +224,9 @@ bot.onText(/\/delete arca (\d+)/, async (msg, match) => {
     bot.sendChatAction(chatId, "typing")
     await bot.sendMessage(chatId, "잘 삭제됐다냥😽")
   } catch (error) {
+    console.error(error)
     await bot.sendMessage(msg.chat.id, `에러났다냥😿`)
+    if (owner) await bot.sendMessage(msg.chat.id, `${error}`)
   }
 })
 
@@ -269,14 +274,10 @@ bot.onText(/.*(털쥐|프칫).*/, async (msg) => {
       console.log(chatType, "output:", output)
       await bot.sendMessage(chatId, output)
     }
-  } catch (error: any) {
-    if (error.response) {
-      console.error(error.response.status)
-      console.error(error.response.data)
-    } else {
-      console.error(error)
-    }
+  } catch (error) {
+    console.error(error)
     await bot.sendMessage(msg.chat.id, "에러났다냥😿")
+    if (owner) await bot.sendMessage(msg.chat.id, `${error}`)
   }
 })
 
