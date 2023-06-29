@@ -96,7 +96,7 @@ bot.onText(/\/debug/, async (msg) => {
   console.log(chatId, JSON.stringify(messages[chatId], null, 4))
 })
 
-bot.onText(/\/sticker (arca) (\d+)/, async (msg, match) => {
+bot.onText(/\/sticker arca (\d+)/, async (msg, match) => {
   const chatId = msg.chat.id
   const chatType = msg.chat.type
   const userId = msg.from?.id
@@ -108,8 +108,7 @@ bot.onText(/\/sticker (arca) (\d+)/, async (msg, match) => {
   }
 
   try {
-    const platform = match![1]
-    const id = match![2]
+    const id = match![1]
 
     await bot.sendMessage(chatId, `기다려라냥😽`)
 
@@ -128,10 +127,6 @@ bot.onText(/\/sticker (arca) (\d+)/, async (msg, match) => {
           length === 1
             ? `arca_${id}_by_misa_chat_bot`
             : `arca_${id}_${i + 1}_${length}_by_misa_chat_bot`
-        const title =
-          length === 1
-            ? `${emoticonTitle} By @misa_chat_bot`
-            : `${emoticonTitle}(${i + 1}/${length}) By @misa_chat_bot`
 
         const stickerSet = await getStickerSet({ name })
         await bot.sendChatAction(chatId, "choose_sticker" as any)
@@ -196,6 +191,7 @@ bot.onText(/\/sticker (arca) (\d+)/, async (msg, match) => {
   }
 })
 
+// TODO: 서로 남의 스티커 지울 수 있는지 확인하기
 bot.onText(/\/delete arca (\d+)/, async (msg, match) => {
   try {
     const chatId = msg.chat.id
