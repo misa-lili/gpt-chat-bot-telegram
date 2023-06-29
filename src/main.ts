@@ -139,7 +139,11 @@ bot.onText(/\/sticker (arca) (\d+)/, async (msg, match) => {
     const emoticonUrls: string[] = []
 
     for (const element of emoticonElements) {
-      emoticonUrls.push(`https:${element.getAttribute("data-src")}`)
+      emoticonUrls.push(
+        `https:${
+          element.getAttribute("data-src") || element.getAttribute("src")
+        }`
+      )
     }
 
     if (emoticonUrls.length === 0) throw new Error("empty emoticonUrls")
@@ -163,6 +167,7 @@ bot.onText(/\/sticker (arca) (\d+)/, async (msg, match) => {
     }
 
     bot.sendChatAction(chatId, "choose_sticker" as any)
+    // TODO: 50개씩 끊어서 업로드 해야합니다.
     await createNewStickerSet({
       user_id: userId,
       name,
@@ -176,9 +181,9 @@ bot.onText(/\/sticker (arca) (\d+)/, async (msg, match) => {
     const newStickerSet = await getStickerSet({ name })
 
     await bot.sendSticker(chatId, newStickerSet.stickers[0].file_id)
+    await bot.sendMessage(chatId, title.split("").join(" "))
     await bot.sendMessage(chatId, `https://t.me/addstickers/${name}`)
   } catch (error) {
-    // console.error(error)
     await bot.sendMessage(chatId, `에러났다냥😿 ${error}`)
   }
 })

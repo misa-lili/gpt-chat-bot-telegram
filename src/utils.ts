@@ -1,27 +1,35 @@
-import ffmpeg from "fluent-ffmpeg"
-import stream from "stream"
-import axios from "axios"
-import fetch from "node-fetch"
-import FormData from "form-data"
 import { StickerSet } from "node-telegram-bot-api"
+import FormData from "form-data"
+import fetch from "node-fetch"
+import stream from "stream"
+import ffmpeg from "fluent-ffmpeg"
+import { Readable } from "stream"
 
 export const convertToWebm = async (url: string): Promise<Buffer> => {
-  const response = await axios.get(url, { responseType: "stream" })
+  const response = await fetch(url)
+
+  if (!response.ok) {
+    throw new Error(`Unexpected response ${response.statusText}`)
+  }
+
+  const buffer = await response.buffer()
+  const readableStream = new Readable()
+  readableStream.push(buffer)
+  readableStream.push(null)
 
   return new Promise((resolve, reject) => {
     const chunks: Uint8Array[] = []
     const passThrough = new stream.PassThrough()
 
     ffmpeg()
-      .input(response.data)
+      .input(readableStream)
       .output(passThrough)
       .size("512x512")
       .videoCodec("libvpx-vp9")
       .outputFormat("webm")
       .noAudio()
       .addOptions("-pix_fmt yuva420p")
-      .on("end", (_, stdout) => {
-        // console.info(stdout)
+      .on("end", function () {
         resolve(Buffer.concat(chunks))
       })
       .on("error", reject)
