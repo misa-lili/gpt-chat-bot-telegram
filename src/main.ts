@@ -138,6 +138,7 @@ bot.onText(/\/sticker arca (\d+)/, async (msg, match) => {
     }
 
     let stickers: BotAPI.InputSticker[] = []
+    // TODO: PromiseAll()
     for await (const [index, url] of emoticonUrls.entries()) {
       bot.sendChatAction(chatId, "choose_sticker" as any)
       console.log(`convert and upload (${index + 1}/${emoticonUrls.length})`)
