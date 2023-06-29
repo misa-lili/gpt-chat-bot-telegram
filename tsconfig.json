@@ -3,15 +3,13 @@
     "target": "ESNext",
     "useDefineForClassFields": true,
     "module": "NodeNext",
-    "lib": ["ESNext", "ES2020", "DOM", "DOM.Iterable"],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "skipLibCheck": false,
 
     /* Bundler mode */
     "moduleResolution": "NodeNext",
-    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
 
     /* Linting */
     "strict": true,
