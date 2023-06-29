@@ -55,7 +55,8 @@ export async function getStickerSet({
   )
   const data = await response.json()
   if (data.ok === false) {
-    throw new Error("no sticker set found.")
+    console.log(data)
+    throw new Error(data.description)
   }
   return data.result
 }
@@ -76,7 +77,8 @@ export async function deleteStickerSet({
   )
   const data = await response.json()
   if (data.ok === false) {
-    throw new Error("no sticker set found.")
+    console.log(data)
+    throw new Error(data.description)
   }
   return data.result
 }
