@@ -111,8 +111,11 @@ export async function uploadStickerFile({
     `https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/uploadStickerFile`,
     { method: "POST", body: form, headers: form.getHeaders() }
   )
-  if (response.ok === false) throw new Error("ok false")
   const data = await response.json()
+  if (response.ok === false) {
+    console.log(data)
+    throw new Error(data.description)
+  }
   return data.result
 }
 
@@ -179,57 +182,12 @@ export async function addStickerToSet({
     `https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/addStickerToSet`,
     { method: "POST", body: form, headers: form.getHeaders() }
   )
+  const data = await response.json()
   if (response.ok === false) {
-    console.error(response.statusText)
-    throw new Error("ok false")
+    console.log(data)
+    throw new Error(data.description)
   }
-  const data = await response.json()
   return data.result
-}
-
-export async function sendMessage({
-  chat_id,
-  text,
-}: {
-  chat_id: number | string
-  text: string
-}): Promise<any /* Message */> {
-  const response = await fetch(
-    `https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/sendMessage?chat_id=${chat_id}&text=${text}`,
-    { method: "POST" }
-  )
-  if (response.ok === false) console.error("ok false")
-  const data = await response.json()
-
-  /**
-   *
-   */
-  const res2 = await fetch(
-    `https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/sendMessage?chat_id=${chat_id}&text=${text}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ chat_id, text }),
-    }
-  )
-
-  /**
-   *
-   */
-  const form = new FormData()
-  form.append("chat_id", chat_id)
-  form.append("text", text)
-
-  const resp3 = await fetch(
-    `https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/sendMessage`,
-    { method: "POST", body: form, headers: form.getHeaders() }
-  )
-
-  console.log(response.ok, res2.ok, resp3.ok)
-
-  return data
 }
 
 export function simpleHash(input: string): string {
