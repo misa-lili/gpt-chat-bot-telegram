@@ -114,44 +114,15 @@ bot.onText(/\/sticker (arca) (\d+)/, async (msg, match) => {
     await bot.sendMessage(chatId, `기다려라냥😽`)
 
     // 아카콘의 경우의 진행
-    const url = "https://arca.live/e/" + id
-    const dom = await JSDOM.fromURL(url)
-    const emoticonTitle = dom.window.document
-      .querySelector(
-        "body > div.root-container > div.content-wrapper.clearfix > article > div > div.article-wrapper > div.article-head > div.title-row > div"
-      )
-      ?.textContent?.trim()
-
-    if (emoticonTitle === undefined) throw new Error()
-
-    // const title = `${emoticonTitle} By @misa_chat_bot`
-    const emoticonElements = dom.window.document.querySelectorAll(
-      ".emoticons-wrapper > .emoticon"
-    )
-    const emoticonUrls: string[] = []
-
-    for (const element of emoticonElements) {
-      emoticonUrls.push(
-        `https:${
-          element.getAttribute("data-src") || element.getAttribute("src")
-        }`
-      )
-    }
+    const { emoticonTitle, emoticonUrls } = await arca(id)
 
     if (emoticonUrls.length === 0) throw new Error("empty emoticonUrls")
 
     // 존재하는 스티커인지 확인하여 주소를 전송하고 리턴합니다.
-    try {
-      const length = Math.ceil(emoticonElements.length / 50)
-      const name =
-        length === 1
-          ? `arca_${id}_by_misa_chat_bot`
-          : `arca_${id}_1_${length}_by_misa_chat_bot`
-      // 존재하지 않으면 여기서 throw error 로 나가게됨
-      await getStickerSet({ name })
+    if (await checkStickerSetExists(emoticonUrls, id)) {
       await bot.sendChatAction(chatId, "typing")
       await bot.sendMessage(chatId, `이미 존재하는 스티커다냥😽`)
-
+      const length = Math.ceil(emoticonUrls.length / 50)
       for (let i = 0; i < length; i++) {
         const name =
           length === 1
@@ -169,7 +140,7 @@ bot.onText(/\/sticker (arca) (\d+)/, async (msg, match) => {
         await bot.sendMessage(chatId, `https://t.me/addstickers/${name}`)
       }
       return
-    } catch (error) {}
+    }
 
     let stickers: BotAPI.InputSticker[] = []
     for await (const [index, url] of emoticonUrls.entries()) {
@@ -221,11 +192,11 @@ bot.onText(/\/sticker (arca) (\d+)/, async (msg, match) => {
       )
     }
   } catch (error) {
-    await bot.sendMessage(chatId, `에러났다냥😿 ${error}`)
+    await bot.sendMessage(chatId, `에러났다냥😿`)
   }
 })
 
-bot.onText(/\/delete (arca) (\d+)/, async (msg, match) => {
+bot.onText(/\/delete arca (\d+)/, async (msg, match) => {
   try {
     const chatId = msg.chat.id
     const chatType = msg.chat.type
@@ -236,17 +207,24 @@ bot.onText(/\/delete (arca) (\d+)/, async (msg, match) => {
       await bot.sendMessage(chatId, `개인적으로 요청해라냥😿`)
       return
     }
-    const platform = match![1]
-    const id = match![2]
-    const name = `arca_${id}_by_misa_chat_bot`
+    const id = match![1]
 
-    const result = await deleteStickerSet({ name })
-    if (result === true) {
-      bot.sendChatAction(chatId, "typing")
-      await bot.sendMessage(chatId, "잘 삭제됐다냥😽")
+    const { emoticonUrls } = await arca(id)
+
+    const length = Math.ceil(emoticonUrls.length / 50)
+    for (let i = 0; i < length; i++) {
+      bot.sendChatAction(chatId, "choose_sticker" as any)
+      const name =
+        length === 1
+          ? `arca_${id}_by_misa_chat_bot`
+          : `arca_${id}_${i + 1}_${length}_by_misa_chat_bot`
+      await deleteStickerSet({ name })
     }
+
+    bot.sendChatAction(chatId, "typing")
+    await bot.sendMessage(chatId, "잘 삭제됐다냥😽")
   } catch (error) {
-    console.error(error)
+    await bot.sendMessage(msg.chat.id, `에러났다냥😿`)
   }
 })
 
@@ -304,3 +282,49 @@ bot.onText(/.*(털쥐|프칫).*/, async (msg) => {
     await bot.sendMessage(msg.chat.id, "에러났다냥😿")
   }
 })
+
+async function arca(id: number | string) {
+  const url = "https://arca.live/e/" + id
+  const dom = await JSDOM.fromURL(url)
+  const emoticonTitle = dom.window.document
+    .querySelector(
+      "body > div.root-container > div.content-wrapper.clearfix > article > div > div.article-wrapper > div.article-head > div.title-row > div"
+    )
+    ?.textContent?.trim()
+
+  if (emoticonTitle === undefined) throw new Error()
+
+  // const title = `${emoticonTitle} By @misa_chat_bot`
+  const emoticonElements = dom.window.document.querySelectorAll(
+    ".emoticons-wrapper > .emoticon"
+  )
+  const emoticonUrls: string[] = []
+
+  for (const element of emoticonElements) {
+    emoticonUrls.push(
+      `https:${element.getAttribute("data-src") || element.getAttribute("src")}`
+    )
+  }
+  return {
+    emoticonTitle,
+    emoticonUrls,
+  }
+}
+
+async function checkStickerSetExists(
+  emoticonUrls: string[],
+  id: number | string
+): Promise<boolean> {
+  try {
+    const length = Math.ceil(emoticonUrls.length / 50)
+    const name =
+      length === 1
+        ? `arca_${id}_by_misa_chat_bot`
+        : `arca_${id}_1_${length}_by_misa_chat_bot`
+    // 존재하지 않으면 여기서 throw error 로 나가게됨
+    await getStickerSet({ name })
+    return true
+  } catch (_) {
+    return false
+  }
+}
