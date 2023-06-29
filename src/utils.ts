@@ -1,129 +1,61 @@
-import fetch from "node-fetch"
 import ffmpeg from "fluent-ffmpeg"
 import stream from "stream"
-import { pipeline } from "stream/promises"
-import { Readable } from "stream"
-import { PassThrough } from "stream"
+import axios from "axios"
 
-// Convert Buffer to Readable Stream
-// const bufferToStream = (buffer: Buffer): stream.Readable => {
-//   const readableStream = new stream.Readable()
-//   readableStream.push(buffer)
-//   readableStream.push(null)
-//   return readableStream
-// }
-
-// export const convertToWebmStream = async (
-//   url: string
-// ): Promise<stream.Stream> => {
-//   return new Promise(async (resolve, reject) => {
-//     const response = await fetch(url)
-//     const buffer = await response.arrayBuffer()
-//     const readable = bufferToStream(Buffer.from(buffer))
-
-//     const outputStream = new stream.PassThrough()
-
-//     ffmpeg(readable)
-//       .inputFormat("mp4")
-//       .outputFormat("webm")
-//       .videoCodec("libvpx-vp9")
-//       .noAudio()
-//       .size("512x512")
-//       .on("progress", (progress) => {
-//         console.log("Processing: " + progress.percent + "% done")
-//       })
-//       .on("error", (error) => {
-//         console.error("Error occurred during conversion:", error)
-//         reject(error)
-//       })
-//       .on("end", () => {
-//         console.log("Conversion completed successfully.")
-//         outputStream.end()
-//         resolve(outputStream.read())
-//       })
-//       .pipe(outputStream, { end: false })
-//   })
-// }
-
-// export const convertToWebmBuffer = (url: string): Promise<Buffer> => {
-//   return new Promise(async (resolve, reject) => {
-//     const response = await fetch(url)
-//     const buffer = await response.arrayBuffer()
-//     const readable = bufferToStream(Buffer.from(buffer))
-
-//     const outputStream = new stream.PassThrough()
-//     const chunks: Buffer[] = []
-
-//     ffmpeg(readable)
-//       .inputFormat("mp4")
-//       .outputFormat("webm")
-//       .videoCodec("libvpx-vp9")
-//       .noAudio()
-//       .size("512x512")
-//       .on("progress", (progress) => {
-//         console.log(JSON.stringify(progress))
-//       })
-//       .on("error", (error) => {
-//         console.error("Error occurred during conversion:", error)
-//         reject(error)
-//       })
-//       .on("data", (chunk: Buffer) => {
-//         chunks.push(chunk)
-//       })
-//       .on("end", (err, stdout, stderr) => {
-//         console.log({ stdout, stderr })
-//         console.log("Conversion completed successfully.")
-//         const result = Buffer.concat(chunks)
-//         console.log(result.byteLength)
-//         resolve(result)
-//       })
-//       .run()
-//   })
-// }
-
-export const bufferToStream = (buffer: Buffer): Readable => {
-  const tmp = new Readable()
+export const bufferToStream = (buffer: Buffer): stream.Readable => {
+  const tmp = new stream.Readable()
   tmp.push(buffer)
   tmp.push(null)
   return tmp
 }
 
-export const convertToWebmBuffer = (url: string): Promise<Buffer> => {
-  return new Promise(async (resolve, reject) => {
-    const response = await fetch(url)
-    const buffer = await response.arrayBuffer()
-    const readable = bufferToStream(Buffer.from(buffer))
+export const convertMp4ToWebm = async (url: string): Promise<Buffer> => {
+  const response = await axios.get(url, { responseType: "stream" })
 
-    let outputBuffer: Buffer = Buffer.alloc(0)
-
-    const stream = new PassThrough()
-
-    stream.on("data", (chunk) => {
-      outputBuffer = Buffer.concat([outputBuffer, chunk])
-    })
-
-    stream.on("end", () => {
-      resolve(outputBuffer)
-    })
+  return new Promise((resolve, reject) => {
+    const chunks: Uint8Array[] = []
+    const passThrough = new stream.PassThrough()
 
     ffmpeg()
-      .input(readable)
-      .output(stream)
-      .outputFormat("webm")
-      .videoCodec("libvpx-vp9")
+      .input(response.data)
       .noAudio()
-      .size("512x486")
-      .autopad()
-      .on("progress", (progress) => {
-        console.log(JSON.stringify(progress))
-      })
-      .on("error", (error) => {
-        console.error("Error occurred during conversion:", error)
-        reject(error)
-      })
+      .videoCodec("libvpx-vp9")
+      .size("512x512")
+      .outputFormat("webm")
+      .output(passThrough)
+      .on("error", reject)
       .on("end", (_, stdout) => {
-        console.log(stdout)
+        console.info(stdout)
+        resolve(Buffer.concat(chunks))
       })
       .run()
+
+    passThrough.on("data", (chunk) => chunks.push(chunk))
+  })
+}
+
+export const convertPngToWebm = async (url: string): Promise<Buffer> => {
+  const response = await axios.get(url, { responseType: "stream" })
+
+  return new Promise((resolve, reject) => {
+    const chunks: Uint8Array[] = []
+    const passThrough = new stream.PassThrough()
+
+    ffmpeg()
+      .input(response.data)
+      .output(passThrough)
+      .size("512x512")
+      .videoCodec("libvpx-vp9")
+      .outputFormat("webm")
+      .noAudio()
+      .addOptions("-pix_fmt yuva420p")
+      .on("end", (_, stdout) => {
+        console.info(stdout)
+        resolve(Buffer.concat(chunks))
+      })
+      .on("error", reject)
+      .run()
+
+    passThrough.on("data", (chunk) => chunks.push(chunk))
   })
 }
