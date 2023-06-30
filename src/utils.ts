@@ -30,9 +30,6 @@ export const convertToWebm = async (url: string): Promise<Buffer> => {
       Video must be in .WEBM format encoded with the VP9 codec.
       Video must have no audio stream.
     */
-    // TODO: loop and speed and duration
-    // TODO: .videoFilters('setpts=PTS/2') <- arca 의 max 시간 확인해서 적용
-
     ffmpeg(readableStream).ffprobe(0, (_, data) => {
       // console.log(data)
       const time = 2.98

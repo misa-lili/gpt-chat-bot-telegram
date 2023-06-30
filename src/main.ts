@@ -181,17 +181,17 @@ bot.onText(/\/sticker arca (\d+)/, async (msg, match) => {
   } catch (error) {
     console.error(error)
     await bot.sendMessage(chatId, `에러났다냥😿`)
-    if (owner) await bot.sendMessage(chatId, `${error}`)
+    if (userId === owner) await bot.sendMessage(chatId, `${error}`)
   }
 })
 
-// TODO: 서로 남의 스티커 지울 수 있는지 확인하기
 bot.onText(/\/delete arca (\d+)/, async (msg, match) => {
   try {
     const chatId = msg.chat.id
     const chatType = msg.chat.type
     const userId = msg.from?.id
     if (userId === undefined) return
+    if (userId !== owner) return
 
     if (chatType !== "private") {
       await bot.sendMessage(chatId, `개인적으로 요청해라냥😿`)
@@ -216,7 +216,7 @@ bot.onText(/\/delete arca (\d+)/, async (msg, match) => {
   } catch (error) {
     console.error(error)
     await bot.sendMessage(msg.chat.id, `에러났다냥😿`)
-    if (owner) await bot.sendMessage(msg.chat.id, `${error}`)
+    if (msg.from?.id === owner) await bot.sendMessage(msg.chat.id, `${error}`)
   }
 })
 
@@ -267,7 +267,7 @@ bot.onText(/.*(털쥐|프칫).*/, async (msg) => {
   } catch (error) {
     console.error(error)
     await bot.sendMessage(msg.chat.id, "에러났다냥😿")
-    if (owner) await bot.sendMessage(msg.chat.id, `${error}`)
+    if (msg.from?.id === owner) await bot.sendMessage(msg.chat.id, `${error}`)
   }
 })
 
