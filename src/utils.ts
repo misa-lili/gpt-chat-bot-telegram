@@ -40,7 +40,7 @@ export const convertToWebm = async (url: string): Promise<Buffer> => {
         .output(passThrough)
         .videoFilters(`setpts=PTS/${pts}`)
         .fps(30)
-        .videoBitrate(512)
+        .videoBitrate(256)
         .duration(time)
         .size("512x512")
         .videoCodec("libvpx-vp9")
@@ -48,12 +48,12 @@ export const convertToWebm = async (url: string): Promise<Buffer> => {
         .noAudio()
         .addOptions("-pix_fmt yuva420p")
         .on("end", function (_, stdout) {
-          const lastFrame = stdout
-            .split("\n")
-            .filter((line: string) => line.includes("frame"))
-            .at(-1)
-            .trim()
-          const fileSize = stdout.split("\n").at(-2).split(" ").at(0)
+          // const lastFrame = stdout
+          //   .split("\n")
+          //   .filter((line: string) => line.includes("frame"))
+          //   .at(-1)
+          //   .trim()
+          // const fileSize = stdout.split("\n").at(-2).split(" ").at(0)
           // console.info({ duration, pts, lastFrame, fileSize })
           resolve(Buffer.concat(chunks))
         })

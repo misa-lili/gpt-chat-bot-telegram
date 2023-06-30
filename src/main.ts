@@ -163,6 +163,7 @@ bot.onText(/\/sticker arca (\d+)/, async (msg, match) => {
     }
 
     await bot.deleteMessage(chatId, previousSticker.message_id)
+    await bot.deleteMessage(chatId, firstMessage.message_id)
 
     bot.sendChatAction(chatId, "choose_sticker" as any)
 
@@ -213,6 +214,9 @@ bot.onText(/\/delete arca (\d+)/, async (msg, match) => {
       await bot.sendMessage(chatId, `개인적으로 요청해라냥😿`)
       return
     }
+
+    const firstMessage = await bot.sendMessage(chatId, `기다려라냥😿`)
+
     const id = match![1]
 
     const { emoticonUrls } = await arca(id)
@@ -228,6 +232,7 @@ bot.onText(/\/delete arca (\d+)/, async (msg, match) => {
     }
 
     bot.sendChatAction(chatId, "typing")
+    await bot.deleteMessage(chatId, firstMessage.message_id)
     await bot.sendMessage(chatId, "잘 삭제됐다냥😽")
   } catch (error) {
     console.error(error)
