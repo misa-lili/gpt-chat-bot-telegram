@@ -19,7 +19,7 @@ config()
 const token = process.env.TELEGRAM_TOKEN
 if (token === undefined) throw new Error("No env: TELEGRAM_TOKEN")
 const bot = new TelegramBot(token, { polling: true })
-const owner = 873486701
+const owner = Number(process.env.OWNER)
 
 /**
  * CHAT-GPT CONFIGURATION
@@ -101,7 +101,7 @@ bot.onText(/\/sticker arca (\d+)/, async (msg, match) => {
   try {
     const id = match![1]
 
-    await bot.sendMessage(chatId, `기다려라냥😽`)
+    const firstMessage = await bot.sendMessage(chatId, `기다려라냥😽`)
 
     // 아카콘의 경우의 진행
     const { emoticonTitle, emoticonUrls } = await arca(id)
@@ -129,10 +129,17 @@ bot.onText(/\/sticker arca (\d+)/, async (msg, match) => {
     }
 
     let stickers: BotAPI.InputSticker[] = []
+    await bot.editMessageText(
+      `${emoticonTitle} 스티커 ${emoticonUrls.length}개를 업로드 중이다냥😺`,
+      { chat_id: chatId, message_id: firstMessage.message_id }
+    )
+    const previousSticker = await bot.sendMessage(
+      chatId,
+      processPercentage(0, emoticonUrls.length)
+    )
     // TODO: PromiseAll()
     for await (const [index, url] of emoticonUrls.entries()) {
       bot.sendChatAction(chatId, "choose_sticker" as any)
-      console.log(`convert and upload (${index + 1}/${emoticonUrls.length})`)
       const buffer = await convertToWebm(url)
       const file = await uploadStickerFile({
         user_id: userId,
@@ -140,6 +147,12 @@ bot.onText(/\/sticker arca (\d+)/, async (msg, match) => {
         sticker_format: "video",
         url,
       })
+
+      await bot.editMessageText(
+        processPercentage(index + 1, emoticonUrls.length),
+        { chat_id: chatId, message_id: previousSticker.message_id }
+      )
+
       const InputSticker: BotAPI.InputSticker = {
         sticker: file.file_id,
         emoji_list: ["🔖"],
@@ -147,6 +160,8 @@ bot.onText(/\/sticker arca (\d+)/, async (msg, match) => {
       // await addStickerToSet({ user_id: userId, name, sticker: InputSticker })
       stickers.push(InputSticker)
     }
+
+    await bot.deleteMessage(chatId, previousSticker.message_id)
 
     bot.sendChatAction(chatId, "choose_sticker" as any)
 
@@ -315,4 +330,15 @@ async function checkStickerSetExists(
   } catch (_) {
     return false
   }
+}
+
+function processPercentage(order: number, length: number): string {
+  let text = ""
+  for (let i = 0; i <= order; i++) {
+    text += "⬛️"
+  }
+  for (let i = 0; i < length - order; i++) {
+    text += "⬜️"
+  }
+  return text
 }

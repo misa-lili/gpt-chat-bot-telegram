@@ -30,6 +30,7 @@ export const convertToWebm = async (url: string): Promise<Buffer> => {
       Video must be in .WEBM format encoded with the VP9 codec.
       Video must have no audio stream.
     */
+    // TODO: 반짝이는 눈 미와 스티커 안됨
     ffmpeg(readableStream).ffprobe(0, (_, data) => {
       // console.log(data)
       const time = 2.98
@@ -54,7 +55,7 @@ export const convertToWebm = async (url: string): Promise<Buffer> => {
             .at(-1)
             .trim()
           const fileSize = stdout.split("\n").at(-2).split(" ").at(0)
-          console.info({ duration, pts, lastFrame, fileSize })
+          // console.info({ duration, pts, lastFrame, fileSize })
           resolve(Buffer.concat(chunks))
         })
         .on("error", reject)
