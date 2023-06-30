@@ -9,6 +9,7 @@ import {
   getStickerSet,
   uploadStickerFile,
 } from "./utils"
+import { test } from "./test"
 
 config()
 // test()

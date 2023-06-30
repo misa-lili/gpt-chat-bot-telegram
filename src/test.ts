@@ -1,5 +1,5 @@
 import { config } from "dotenv"
-import { convertToWebm, createNewStickerSet, uploadStickerFile } from "./utils"
+import { convertToWebm } from "./utils"
 import fs from "fs"
 
 config()
@@ -25,32 +25,7 @@ export async function test() {
   const stickerSetUrl = "https://t.me/addstickers/arca_20479_by_misa_chat_bot"
 
   const stickerName = "arca_20479_by_misa_chat_bot"
-  const user_id = 873486701
 
-  // convertToWebm(url)
-
-  const buffer = await convertToWebm(imgUrl)
-
-  const file = await uploadStickerFile({
-    user_id,
-    sticker: buffer,
-    sticker_format: "video",
-    url: imgUrl,
-  })
-
-  const InputSticker: BotAPI.InputSticker = {
-    sticker: file.file_id,
-    emoji_list: ["🔖"],
-  }
-
-  let isSuccess = await createNewStickerSet({
-    user_id,
-    name: stickerName,
-    title: "By @misa_chat_bot",
-    stickers: [InputSticker],
-    sticker_format: "video",
-  })
-
-  if (isSuccess) console.log(stickerSetUrl)
-  else console.error(isSuccess)
+  const buffer = await convertToWebm(url)
+  writeBufferToFile(buffer, "hello.webm")
 }
