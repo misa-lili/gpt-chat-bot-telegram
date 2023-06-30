@@ -35,15 +35,16 @@ export const convertToWebm = async (url: string): Promise<Buffer> => {
 
     ffmpeg(readableStream).ffprobe(0, (_, data) => {
       // console.log(data)
+      const time = 2.98
       const duration: number = data.format.duration ?? 0
-      const pts = duration > 3 ? duration / 3 : 1
+      const pts = duration > time ? duration / time : 1
       ffmpeg()
         .input(readableStream2)
         .output(passThrough)
         .videoFilters(`setpts=PTS/${pts}`)
         .fps(24)
-        .videoBitrate("384k", true)
-        .duration(3)
+        .videoBitrate(768)
+        .duration(time)
         .size("512x512")
         .videoCodec("libvpx-vp9")
         .outputFormat("webm")
