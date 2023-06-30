@@ -1,6 +1,6 @@
 import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai"
 import { config } from "dotenv"
-import TelegramBot, { PhotoSize, Sticker } from "node-telegram-bot-api"
+import TelegramBot from "node-telegram-bot-api"
 import { JSDOM } from "jsdom"
 import {
   convertToWebm,
@@ -9,16 +9,6 @@ import {
   getStickerSet,
   uploadStickerFile,
 } from "./utils"
-
-interface StickerSet {
-  name: string
-  title: string
-  sticker_type: string
-  is_animated: boolean
-  is_video: boolean
-  stickers: Sticker[]
-  thumbnail: PhotoSize
-}
 
 config()
 // test()

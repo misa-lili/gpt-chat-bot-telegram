@@ -13,9 +13,8 @@ export const convertToWebm = async (url: string): Promise<Buffer> => {
   }
 
   const buffer = await response.buffer()
-  const readableStream = new Readable()
-  readableStream.push(buffer)
-  readableStream.push(null)
+  const readableStream = Readable.from(buffer)
+  const readableStream2 = Readable.from(buffer)
 
   return new Promise((resolve, reject) => {
     const chunks: Uint8Array[] = []
@@ -34,25 +33,37 @@ export const convertToWebm = async (url: string): Promise<Buffer> => {
     // TODO: loop and speed and duration
     // TODO: .videoFilters('setpts=PTS/2') <- arca 의 max 시간 확인해서 적용
 
-    ffmpeg()
-      .input(readableStream)
-      .output(passThrough)
-      .fps(24)
-      .videoBitrate("256k", true)
-      .duration(2.98)
-      .size("512x512")
-      .videoCodec("libvpx-vp9")
-      .outputFormat("webm")
-      .noAudio()
-      .addOptions("-pix_fmt yuva420p")
-      .on("end", function (_, stdout) {
-        console.log(stdout.split("\n").at(-2).split(" ").at(0))
-        resolve(Buffer.concat(chunks))
-      })
-      .on("error", reject)
-      .run()
+    ffmpeg(readableStream).ffprobe(0, (_, data) => {
+      // console.log(data)
+      const duration: number = data.format.duration ?? 0
+      const pts = duration > 3 ? duration / 3 : 1
+      ffmpeg()
+        .input(readableStream2)
+        .output(passThrough)
+        .videoFilters(`setpts=PTS/${pts}`)
+        .fps(24)
+        .videoBitrate("384k", true)
+        .duration(3)
+        .size("512x512")
+        .videoCodec("libvpx-vp9")
+        .outputFormat("webm")
+        .noAudio()
+        .addOptions("-pix_fmt yuva420p")
+        .on("end", function (_, stdout) {
+          const lastFrame = stdout
+            .split("\n")
+            .filter((line: string) => line.includes("frame"))
+            .at(-1)
+            .trim()
+          const fileSize = stdout.split("\n").at(-2).split(" ").at(0)
+          console.info({ duration, pts, lastFrame, fileSize })
+          resolve(Buffer.concat(chunks))
+        })
+        .on("error", reject)
+        .run()
 
-    passThrough.on("data", (chunk) => chunks.push(chunk))
+      passThrough.on("data", (chunk) => chunks.push(chunk))
+    })
   })
 }
 
