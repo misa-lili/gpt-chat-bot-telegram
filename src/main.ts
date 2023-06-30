@@ -129,7 +129,6 @@ bot.onText(/\/sticker arca (\d+)/, async (msg, match) => {
       return
     }
 
-    let stickers: BotAPI.InputSticker[] = []
     await bot.editMessageText(
       `${emoticonTitle} 스티커 ${emoticonUrls.length}개를 업로드 중이다냥😺`,
       { chat_id: chatId, message_id: firstMessage.message_id }
@@ -138,28 +137,35 @@ bot.onText(/\/sticker arca (\d+)/, async (msg, match) => {
       chatId,
       processPercentage(0, emoticonUrls.length)
     )
-    // TODO: PromiseAll()
-    for await (const [index, url] of emoticonUrls.entries()) {
-      bot.sendChatAction(chatId, "choose_sticker" as any)
-      const buffer = await convertToWebm(url)
-      const file = await uploadStickerFile({
-        user_id: userId,
-        sticker: buffer,
-        sticker_format: "video",
-        url,
-      })
 
-      await bot.editMessageText(
-        processPercentage(index + 1, emoticonUrls.length),
-        { chat_id: chatId, message_id: previousSticker.message_id }
+    /**
+     * 병렬 실행
+     */
+    let stickers: BotAPI.InputSticker[] = []
+    const promiseCreators = emoticonUrls.map(
+      (url) => () => processSticker(chatId, userId, url)
+    )
+
+    const n = 10 // 20x
+    const len = promiseCreators.length
+    const lim = Math.ceil(len / n)
+
+    const arr = new Array(lim).fill(0).map((_, idx) => idx)
+    for await (const i of arr) {
+      stickers = stickers.concat(
+        await Promise.all(
+          promiseCreators
+            .slice(i * n, (i + 1) * n)
+            .map((promiseCreator) => promiseCreator())
+        )
       )
-
-      const InputSticker: BotAPI.InputSticker = {
-        sticker: file.file_id,
-        emoji_list: ["🔖"],
-      }
-      // await addStickerToSet({ user_id: userId, name, sticker: InputSticker })
-      stickers.push(InputSticker)
+      await bot.editMessageText(
+        processPercentage((i + 1) * n, emoticonUrls.length),
+        {
+          chat_id: chatId,
+          message_id: previousSticker.message_id,
+        }
+      )
     }
 
     await bot.deleteMessage(chatId, previousSticker.message_id)
@@ -340,11 +346,34 @@ async function checkStickerSetExists(
 
 function processPercentage(order: number, length: number): string {
   let text = ""
-  for (let i = 0; i <= order; i++) {
+  for (let i = 0; i < order; i++) {
     text += "⬛️"
   }
   for (let i = 0; i < length - order; i++) {
     text += "⬜️"
   }
   return text
+}
+
+async function processSticker(
+  chatId: TelegramBot.ChatId,
+  userId: number,
+  url: string
+): Promise<BotAPI.InputSticker> {
+  return new Promise(async (resolve, _) => {
+    bot.sendChatAction(chatId, "choose_sticker" as any)
+    const buffer = await convertToWebm(url)
+    const file = await uploadStickerFile({
+      user_id: userId,
+      sticker: buffer,
+      sticker_format: "video",
+      url,
+    })
+
+    const InputSticker: BotAPI.InputSticker = {
+      sticker: file.file_id,
+      emoji_list: ["🔖"],
+    }
+    resolve(InputSticker)
+  })
 }
