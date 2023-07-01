@@ -146,7 +146,7 @@ bot.onText(/\/sticker arca (\d+)/, async (msg, match) => {
       (url) => () => processSticker(chatId, userId, url)
     )
 
-    const n = 3 // 5x // 10x // 20x
+    const n = 1 // 5x // 10x // 20x
     const len = promiseCreators.length
     const lim = Math.ceil(len / n)
 
