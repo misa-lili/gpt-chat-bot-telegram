@@ -1,18 +1,18 @@
 import { StickerSet } from "node-telegram-bot-api"
 import FormData from "form-data"
-import fetch from "node-fetch"
 import stream from "stream"
 import ffmpeg from "fluent-ffmpeg"
+import axios from "axios"
 import { Readable } from "stream"
 
 export const convertToWebm = async (url: string): Promise<Buffer> => {
-  const response = await fetch(url)
+  const response = await axios.get(url, { responseType: "arraybuffer" })
 
-  if (!response.ok) {
+  if (response.status !== 200) {
     throw new Error(`Unexpected response ${response.statusText}`)
   }
 
-  const buffer = await response.buffer()
+  const buffer = Buffer.from(response.data)
   const readableStream = Readable.from(buffer)
   const readableStream2 = Readable.from(buffer)
 
@@ -75,11 +75,12 @@ export async function getStickerSet({
 }): Promise<StickerSet> {
   const form = new FormData()
   form.append("name", name)
-  const response = await fetch(
+  const response = await axios.post(
     `https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/getStickerSet`,
-    { method: "POST", body: form, headers: form.getHeaders() }
+    form,
+    { headers: form.getHeaders() }
   )
-  const data = await response.json()
+  const data = response.data
   if (data.ok === false) {
     // console.error("getStickerSet")
     // console.error(data)
@@ -98,11 +99,12 @@ export async function deleteStickerSet({
 }): Promise<boolean> {
   const form = new FormData()
   form.append("name", name)
-  const response = await fetch(
+  const response = await axios.post(
     `https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/deleteStickerSet`,
-    { method: "POST", body: form, headers: form.getHeaders() }
+    form,
+    { headers: form.getHeaders() }
   )
-  const data = await response.json()
+  const data = response.data
   if (data.ok === false) {
     console.error("deleteStickerSet")
     console.error(data)
@@ -134,12 +136,13 @@ export async function uploadStickerFile({
   })
   form.append("sticker_format", sticker_format)
 
-  const response = await fetch(
+  const response = await axios.post(
     `https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/uploadStickerFile`,
-    { method: "POST", body: form, headers: form.getHeaders() }
+    form,
+    { headers: form.getHeaders() }
   )
-  const data = await response.json()
-  if (response.ok === false) {
+  const data = response.data
+  if (data.ok === false) {
     console.error("uploadStickerFile")
     console.error(data)
     throw new Error("uploadStickerFile" + data.description)
@@ -177,11 +180,12 @@ export async function createNewStickerSet({
   form.append("sticker_type", sticker_type ?? "regular")
   // form.append("needs_repainting", needs_repainting ?? false)
 
-  const response = await fetch(
+  const response = await axios.post(
     `https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/createNewStickerSet`,
-    { method: "POST", body: form, headers: form.getHeaders() }
+    form,
+    { headers: form.getHeaders() }
   )
-  const data = await response.json()
+  const data = response.data
   if (data.ok === false) {
     console.error("createNewStickerSet")
     console.error(data)
@@ -207,12 +211,13 @@ export async function addStickerToSet({
   form.append("name", name)
   form.append("sticker", JSON.stringify(sticker))
 
-  const response = await fetch(
+  const response = await axios.post(
     `https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/addStickerToSet`,
-    { method: "POST", body: form, headers: form.getHeaders() }
+    form,
+    { headers: form.getHeaders() }
   )
-  const data = await response.json()
-  if (response.ok === false) {
+  const data = response.data
+  if (data.ok === false) {
     console.error("addStickerToSet")
     console.error(data)
     throw new Error("addStickerToSet" + data.description)
