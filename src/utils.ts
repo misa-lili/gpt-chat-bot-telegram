@@ -48,13 +48,13 @@ export const convertToWebm = async (url: string): Promise<Buffer> => {
         .noAudio()
         .addOptions("-pix_fmt yuva420p")
         .on("end", function (_, stdout) {
-          // const lastFrame = stdout
-          //   .split("\n")
-          //   .filter((line: string) => line.includes("frame"))
-          //   .at(-1)
-          //   .trim()
-          // const fileSize = stdout.split("\n").at(-2).split(" ").at(0)
-          // console.info({ duration, pts, lastFrame, fileSize })
+          const lastFrame = stdout
+            .split("\n")
+            .filter((line: string) => line.includes("frame"))
+            .at(-1)
+            .trim()
+          const fileSize = stdout.split("\n").at(-2).split(" ").at(0)
+          console.info({ duration, pts, lastFrame, fileSize })
           resolve(Buffer.concat(chunks))
         })
         .on("error", reject)
