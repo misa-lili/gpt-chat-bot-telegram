@@ -22,7 +22,7 @@ declare namespace BotAPI {
   /**
    * https://core.telegram.org/bots/api#inputfile
    */
-  interface InputFile extends Buffer {}
+  type InputFile = Buffer | import("stream").Stream | string
 
   /**
    * https://core.telegram.org/bots/api#maskposition
