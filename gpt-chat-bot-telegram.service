@@ -5,8 +5,8 @@ After=network-online.target
 
 [Service]
 Type=simple
-User=turg
-WorkingDirectory=/home/turg/Projects/gpt-chat-bot-telegram
+User=ubuntu
+WorkingDirectory=/home/ubuntu/gpt-chat-bot-telegram
 ExecStart=/usr/bin/node src/main.js
 Restart=on-failure
 
