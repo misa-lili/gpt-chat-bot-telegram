@@ -171,8 +171,6 @@ bot.onText(/\/sticker arca (\d+)/, async (msg, match) => {
     await bot.deleteMessage(chatId, previousSticker.message_id)
     await bot.deleteMessage(chatId, firstMessage.message_id)
 
-    bot.sendChatAction(chatId, "choose_sticker" as any)
-
     // 50개씩 끊어서 업로드 해야합니다.
     const length = Math.ceil(stickers.length / 50)
     for (let i = 0; i < length; i += 1) {
@@ -184,6 +182,7 @@ bot.onText(/\/sticker arca (\d+)/, async (msg, match) => {
         length === 1
           ? `${emoticonTitle} By @misa_chat_bot`
           : `${emoticonTitle}(${i + 1}/${length}) By @misa_chat_bot`
+      bot.sendChatAction(chatId, "choose_sticker" as any)
       await createNewStickerSet({
         user_id: userId,
         name,
@@ -191,9 +190,9 @@ bot.onText(/\/sticker arca (\d+)/, async (msg, match) => {
         stickers: stickers.slice(i * 50, (i + 1) * 50),
         sticker_format: "video",
       })
-      bot.sendChatAction(chatId, "choose_sticker" as any)
 
       const stickerSet = await getStickerSet({ name })
+      bot.sendChatAction(chatId, "choose_sticker" as any)
       await bot.sendSticker(chatId, stickerSet.stickers[0].file_id)
       await bot.sendMessage(chatId, stickerSet.title.split("").join(" "))
       await bot.sendMessage(
@@ -363,6 +362,7 @@ async function processSticker(
   return new Promise(async (resolve, _) => {
     bot.sendChatAction(chatId, "choose_sticker" as any)
     const buffer = await convertToWebm(url)
+    bot.sendChatAction(chatId, "choose_sticker" as any)
     const file = await uploadStickerFile({
       user_id: userId,
       sticker: buffer,
