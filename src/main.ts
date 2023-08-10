@@ -253,6 +253,8 @@ bot.onText(/.*(털쥐|프칫).*/, async (msg) => {
     const chatId = msg.chat.id
     const username = msg.from?.id.toString()
 
+    const isForProfessor = input.includes("털쥐박사님")
+
     if (messages[chatId] === undefined) initChatRoom(msg)
 
     console.log(chatType, chatId, username, "input:", input)
@@ -276,7 +278,9 @@ bot.onText(/.*(털쥐|프칫).*/, async (msg) => {
 
       const completion = await openai.createChatCompletion({
         model: "gpt-4-0613",
-        messages: messages[chatId],
+        messages: isForProfessor
+          ? messages[chatId].filter((m) => m.role !== "system")
+          : messages[chatId],
         temperature: 1,
       })
       const output = completion.data.choices[0].message?.content ?? ""
